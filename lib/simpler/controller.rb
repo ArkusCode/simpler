@@ -34,21 +34,29 @@ module Simpler
 
     def write_response
       body = render_body
-
+      set_default_headers
       @response.write(body)
     end
 
     def render_body
-      View.new(@request.env).render(binding)
+      View.new(@request.env).render(binding).content
     end
 
     def params
-      @request.params
+      @request.env['action_params'].each { |param| @request.params.merge!(param) }
     end
 
     def plain(text)
-      @response.write(text)
-      @response['Content-Type'] = 'text/plain'
+      resp(View::PlainRenderer.new(text))
+    end
+
+    def html(context)
+      resp(View::HTMLRenderer.new(context, binding))
+    end
+
+    def resp(obj)
+      @response.write(obj.content)
+      @response['Content-Type'] = obj.header
     end
 
     def status(status)
@@ -65,6 +73,7 @@ module Simpler
 
     def render(template)
       return plain(template[:plain]) unless template[:plain].nil?
+      return html(template[:html]) unless template[:html].nil?
       @request.env['simpler.template'] = template
     end
 

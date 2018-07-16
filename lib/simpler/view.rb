@@ -1,6 +1,9 @@
+require_relative 'view/html_renderer'
+require_relative 'view/plain_renderer'
 require 'erb'
 
 module Simpler
+
   class View
 
     VIEW_BASE_PATH = 'app/views'.freeze
@@ -11,9 +14,7 @@ module Simpler
 
     def render(binding)
       template = File.read(template_path)
-
-
-      ERB.new(template).result(binding)
+      HTMLRenderer.new(template, binding)
     end
 
     private

@@ -27,7 +27,7 @@ module Simpler
 
         if request_path[0] == route_path[0] && request_path.size == route_path.size
           route_path.each_with_index do |elem, index|
-            @params.push(elem => request_path[index]) if elem == ':id'
+            @params.push(elem => request_path[index]) if elem[0] == ':'
           end
           true
         end
