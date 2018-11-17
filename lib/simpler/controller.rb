@@ -14,6 +14,7 @@ module Simpler
     def make_response(action)
       @request.env['simpler.controller'] = self
       @request.env['simpler.action'] = action
+      @request.env['simpler.params'].merge!(@request.params)
 
       set_default_headers
       send(action)
@@ -22,10 +23,18 @@ module Simpler
       @response.finish
     end
 
+    def params
+      @request.env['simpler.params']
+    end
+
     private
 
     def extract_name
       self.class.name.match('(?<name>.+)Controller')[:name].downcase
+    end
+
+    def change_header(template)
+      @response['Content-Type'] = 'text/plain' if template[:plain]
     end
 
     def set_default_headers
@@ -39,15 +48,25 @@ module Simpler
     end
 
     def render_body
-      View.new(@request.env).render(binding)
+      renderer = View.render(@request.env)
+      renderer.new(@request.env).render(binding)
     end
 
-    def params
-      @request.params
+    def status(code)
+      @response.status = code
+    end
+
+    def header
+      @response
     end
 
     def render(template)
-      @request.env['simpler.template'] = template
+      if template.is_a?(String)
+        @request.env['simpler.template'] = template
+      else
+        change_header(template)
+        @request.env['simpler.template_plain'] = template[:plain] if template[:plain]
+      end
     end
 
   end
